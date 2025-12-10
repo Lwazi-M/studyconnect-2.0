@@ -1,26 +1,39 @@
-@import "tailwindcss";
+/**
+ * FILE: src/app/globals.css
+ * TITLE: Global Stylesheet (The Visual Rules)
+ * PURPOSE: 
+ * This file controls the look and feel of the entire application.
+ * It does two main things:
+ * 1. It loads Tailwind CSS, the tool we use to style everything (colors, spacing, fonts).
+ * 2. It defines custom styles that Tailwind doesn't provide out of the box, 
+ * such as hiding the ugly scrollbar to make the app feel like a real mobile app.
+ */
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* @tailwind directives:
+   These three lines tell the compiler to "inject" all of Tailwind's pre-written styles here.
+   Think of this as importing a massive library of ready-to-use Lego bricks.
+*/
+@tailwind base;       /* Resets browser defaults (e.g., removes default margins on <body>) */
+@tailwind components; /* Loads component classes (if any are defined) */
+@tailwind utilities;  /* Loads the utility classes we use everywhere (e.g., 'text-center', 'flex', 'mt-4') */
+
+
+/* --- CUSTOM UTILITIES --- */
+/* You can add your own custom CSS below this line. */
+
+/* CLASS: .no-scrollbar
+   PURPOSE: Hides the physical scrollbar while still allowing the user to scroll.
+   WHY? On mobile apps (like Instagram or WhatsApp), you rarely see a grey scrollbar 
+   taking up space on the right. We hide it to make the "iPhone frame" look cleaner.
+*/
+
+/* For Chrome, Safari, and Opera browsers */
+.no-scrollbar::-webkit-scrollbar {
+    display: none; /* Completely hides the scrollbar */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* For IE, Edge, and Firefox browsers */
+.no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
 }

@@ -1,124 +1,193 @@
 /**
- * StudyConnect 2.0 - Main Page (The "Digital Phone")
- *
- * This component acts as the entry point for the application.
- * It renders a simulated mobile phone frame centered on the screen.
- * Inside this frame, the actual mobile-first UI is displayed.
+ * FILE: src/app/page.tsx
+ * PURPOSE: Main Dashboard / Home Page
+ * DESCRIPTION: 
+ * This is the first screen the user sees. It acts as a central hub displaying:
+ * 1. A greeting and notification bell.
+ * 2. A "Global Search" bar that filters through both Peers and Resources.
+ * 3. Daily Stats (Streak) and quick links (Resources) when not searching.
+ * 4. A list of recent peers to chat with.
  */
 
-// This is the default export for the Home component.
-// In Next.js, this renders the route for "/" (the homepage).
+// "use client" is a Next.js directive. 
+// It tells the framework: "This page has interactive features (like typing in a search bar),
+// so please render it in the user's browser (Client-Side), not just on the server."
+"use client";
+
+import Link from "next/link"; // Optimized link component for fast page navigation
+import { useState } from "react"; // React Hook for managing state (data that changes)
+
+// --- MOCK DATABASE ---
+// In a real-world application, this data would be fetched from a backend API (like Firebase or Supabase).
+// For this portfolio demonstration, we use static arrays to simulate the data structure.
+
+// 1. Peers Data: Represents other students the user can connect with.
+const peers = [
+  { id: "nomsa", name: "Nomsa Dlamini", role: "Mathematics • 3rd Year", initials: "ND", color: "bg-blue-400" },
+  { id: "khotso", name: "Khotso Mokoena", role: "Computer Science • 2nd Year", initials: "KM", color: "bg-pink-400" },
+  { id: "sipho", name: "Sipho Zulu", role: "Physics • 1st Year", initials: "SZ", color: "bg-yellow-400" },
+];
+
+// 2. Resources Data: Represents study files available for download.
+const resources = [
+  { id: 1, title: "Calculus 101 Finals", type: "PDF", color: "bg-red-50 dark:bg-red-900/20", text: "text-red-500 dark:text-red-400" },
+  { id: 2, title: "Data Structures Notes", type: "DOC", color: "bg-blue-50 dark:bg-blue-900/20", text: "text-blue-500 dark:text-blue-400" },
+  { id: 3, title: "Physics Lab Results", type: "XLS", color: "bg-green-50 dark:bg-green-900/20", text: "text-green-600 dark:text-green-400" },
+];
+
 export default function Home() {
+  // --- STATE MANAGEMENT ---
+  // useState is like the "Short-Term Memory" of this component.
+  // 'query' holds the text the user types into the search bar.
+  // 'setQuery' is the function we call to update that text.
+  const [query, setQuery] = useState("");
+
+  // --- SEARCH LOGIC ---
+  // We use the .filter() method to create a new list based on the search query.
+  // It acts like a sieve: looking at every item and keeping only the ones 
+  // where the name includes the text the user typed.
+  // We convert everything to .toLowerCase() so that "Math" matches "math" (case-insensitive).
+  
+  const filteredPeers = peers.filter(p => p.name.toLowerCase().includes(query.toLowerCase()));
+  const filteredResources = resources.filter(r => r.title.toLowerCase().includes(query.toLowerCase()));
+  
+  // Boolean Flag: If the query string has length > 0, we know the user is searching.
+  // This helps us toggle the UI between "Dashboard View" and "Search Results View".
+  const isSearching = query.length > 0;
+
   return (
-    // <main>: The main container for the entire webpage.
-    // 'min-h-screen': Forces the container to be at least as tall as the user's screen (100vh).
-    // 'flex items-center justify-center': Uses Flexbox to perfectly center the phone in the middle.
-    // 'bg-gradient-to-br ...': Creates a background gradient from top-left (br = bottom-right) using 3 colors.
-    // 'p-4': Adds padding around the edges so the phone never touches the browser wall on small screens.
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-4">
+    // Main Container
+    // 'bg-transparent': Allows the global watermark and background color (set in layout.tsx) to show through.
+    // 'pb-32': Adds padding at the bottom so the last item isn't hidden behind the Floating Bottom Nav.
+    <main className="bg-transparent p-6 font-sans pb-32">
+      
+      {/* --- HEADER SECTION --- */}
+      <header className="flex justify-between items-start mb-6">
+        <div>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">StudyConnect: Good Day,</p>
+          <h1 className="text-2xl font-bold text-black dark:text-white">Thabo</h1>
+        </div>
+        
+        {/* Notification Icon Button */}
+        <button className="p-2">
+          <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+          </svg>
+        </button>
+      </header>
 
-      {/* --- THE PHONE CHASSIS (THE FRAME) --- 
-        'relative': Establishes a positioning context for children (like the notch).
-        'w-[375px] h-[812px]': Sets specific dimensions to mimic an iPhone X/11/12/13 size.
-        'bg-black': Sets the bezel color.
-        'rounded-[50px]': Gives the phone its signature super-rounded corners.
-        'shadow-2xl': Adds a large drop shadow to make it "float" above the gradient.
-        'border-[14px]': The thickness of the bezel.
-        'overflow-hidden': Ensures content doesn't spill out of the rounded corners.
-        'ring-4 ring-black/10': Adds a subtle outer ring for realism.
-      */}
-      <div className="relative w-[375px] h-[812px] bg-black rounded-[50px] shadow-2xl border-[14px] border-black overflow-hidden ring-4 ring-black/10">
+      {/* --- GLOBAL SEARCH BAR --- */}
+      <div className="relative mb-8">
+        <input 
+          type="text" 
+          value={query}
+          // Bi-directional Binding: When user types, update 'query' state instantly.
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search resources & peers..." 
+          // Tailwind Classes:
+          // 'w-full': spans full width.
+          // 'dark:bg-gray-900': changes background to dark grey in Dark Mode.
+          // 'focus:ring-2': adds a blue outline when clicked.
+          className="w-full bg-white dark:bg-gray-900 py-3 pl-10 pr-4 rounded-xl shadow-sm text-gray-600 dark:text-gray-200 outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900 transition-colors"
+        />
+        {/* Magnifying Glass Icon (Positioned absolutely inside the input) */}
+        <svg className="w-5 h-5 text-blue-400 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+      </div>
 
-        {/* --- THE DYNAMIC ISLAND / NOTCH ---
-          'absolute': Positions this element freely on top of the phone screen.
-          'top-0': Sticks it to the very top edge.
-          'left-1/2 -translate-x-1/2': A classic CSS trick to perfectly center an absolute element horizontally.
-          'z-50': A high Z-index ensures the notch stays *above* any scrolling content.
-        */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-black rounded-b-2xl z-50"></div>
-
-        {/* --- THE SCREEN CONTENT --- 
-          'w-full h-full': Fills the available space inside the phone frame.
-          'bg-slate-900': Sets the app's background to a dark, professional blue-grey.
-          'overflow-y-auto': Allows the user to scroll vertically inside the phone if content overflows.
-        */}
-        <div className="w-full h-full bg-slate-900 text-white overflow-y-auto">
-
-          {/* --- HEADER (Glassmorphism Effect) ---
-            'sticky top-0': Keeps the header fixed at the top while content scrolls under it.
-            'z-40': Keeps it above the content but below the notch (z-50).
-            'bg-slate-900/60': Sets the background color with 60% opacity.
-            'backdrop-blur-md': The KEY to glassmorphism. It blurs everything behind this element.
-            'border-b border-white/10': Adds a subtle 10% opacity white line at the bottom.
-          */}
-          <div className="sticky top-0 z-40 pt-12 pb-4 px-6 bg-slate-900/60 backdrop-blur-md border-b border-white/10 flex justify-between items-center">
-            {/* App Title with Gradient Text 
-              'bg-clip-text text-transparent': Allows the background gradient to show *only* inside the text letters.
-            */}
-            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              StudyConnect
-            </h1>
-
-            {/* Profile Avatar Placeholder (Circle with Gradient) */}
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-400 to-orange-500 shadow-lg"></div>
+      {/* --- DEFAULT DASHBOARD VIEW --- */}
+      {/* Conditional Rendering:
+          The '!isSearching' means "If we are NOT searching".
+          This section hides automatically when the user starts typing. */}
+      {!isSearching && (
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          
+          {/* 1. Streak Card (Gamification Feature) */}
+          <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm flex flex-col justify-between h-32 relative overflow-hidden transition-colors">
+            {/* Decorative circle shape in top-right corner */}
+            <div className="absolute top-0 right-0 w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-bl-full -mr-2 -mt-2"></div>
+            <span className="text-2xl">🔥</span>
+            <div>
+              <p className="text-2xl font-bold text-black dark:text-white">7</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Day Streak</p>
+            </div>
           </div>
 
-          {/* --- SCROLLABLE CONTENT AREA ---
-            'p-6': Adds padding inside the content area.
-            'space-y-6': Automatically adds vertical space between every child element (the cards).
-          */}
-          <div className="p-6 space-y-6">
-
-            {/* --- CARD 1: Recent Activity (Glass) ---
-              'bg-white/5': Very subtle (5%) white background.
-              'border-white/10': Subtle border.
-              'hover:bg-white/10': When mouse hovers, background becomes slightly brighter.
-              'transition-all duration-300': Makes the hover effect smooth.
-            */}
-            <div className="p-5 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-sm shadow-xl hover:bg-white/10 transition-all duration-300">
-              <h2 className="text-lg font-semibold text-blue-200">Recent Activity</h2>
-              <p className="text-sm text-slate-400 mt-2">You helped 3 peers today!</p>
-            </div>
-
-            {/* --- CARD 2: Study Session (Liquid Gradient) ---
-              'bg-gradient-to-br': Adds a diagonal gradient background.
-              'from-blue-600/20': Starts with 20% opacity blue.
-            */}
-            <div className="p-5 rounded-3xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-white/10 backdrop-blur-sm shadow-xl">
-              <h2 className="text-lg font-semibold text-white">Next Study Session</h2>
-              <div className="mt-3 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">📚</div>
-                <div>
-                  <p className="font-medium">Mathematics 101</p>
-                  <p className="text-xs text-slate-400">In 30 mins</p>
-                </div>
+          {/* 2. Resources Count Card (Quick Link) */}
+          <Link href="/resources">
+            <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm flex flex-col justify-between h-32 relative overflow-hidden cursor-pointer hover:shadow-md transition-all">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-purple-50 dark:bg-purple-900/20 rounded-bl-full -mr-2 -mt-2"></div>
+              <span className="text-2xl">📚</span>
+              <div>
+                <p className="text-2xl font-bold text-black dark:text-white">5</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Resources</p>
               </div>
             </div>
-
-            {/* Placeholders to force scrolling */}
-            <div className="p-5 rounded-3xl bg-white/5 border border-white/5">
-              <p className="text-slate-500 text-sm">More content...</p>
-            </div>
-            <div className="p-5 rounded-3xl bg-white/5 border border-white/5">
-              <p className="text-slate-500 text-sm">More content...</p>
-            </div>
-
-          </div>
-
-          {/* --- BOTTOM NAVIGATION BAR (Glass Effect) ---
-            'absolute bottom-0': Pins it to the bottom of the phone frame.
-            'w-full': Stretches it across.
-            'backdrop-blur-lg': Stronger blur for the nav bar.
-          */}
-          <div className="absolute bottom-0 w-full h-20 bg-slate-900/80 backdrop-blur-lg border-t border-white/10 flex justify-around items-center pb-2">
-             <div className="w-6 h-6 rounded-full bg-white/20"></div>
-             {/* The Center "Add" Button with Glow */}
-             <div className="w-10 h-10 rounded-full bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] flex items-center justify-center text-white font-bold text-xl">+</div>
-             <div className="w-6 h-6 rounded-full bg-white/20"></div>
-          </div>
+          </Link>
 
         </div>
-      </div>
+      )}
+
+      {/* --- SEARCH RESULTS / LIST VIEW --- */}
+      
+      {/* Peers Section */}
+      <section className="mb-6">
+        <h2 className="text-lg font-bold text-black dark:text-white mb-4">
+            {/* Dynamic Header Text: Updates based on search state */}
+            {isSearching ? `Peers found (${filteredPeers.length})` : "Recent Peers"}
+        </h2>
+        <div className="space-y-4">
+          
+          {/* Conditional Rendering: Check if our filter found any peers */}
+          {filteredPeers.length > 0 ? (
+            // MAP FUNCTION: This is a "Factory Line". 
+            // It loops through the 'filteredPeers' data and outputs a UI Card for each one.
+            filteredPeers.map((peer) => (
+              <Link href={`/chat/${peer.id}`} key={peer.id}>
+                <div className="flex items-center bg-white dark:bg-gray-900 p-3 rounded-xl shadow-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors mb-3">
+                  {/* Initials Avatar */}
+                  <div className={`w-10 h-10 rounded-full ${peer.color} mr-3 flex items-center justify-center text-white font-bold text-xs`}>{peer.initials}</div>
+                  
+                  {/* Peer Info */}
+                  <div className="flex-1">
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">{peer.name}</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{peer.role}</p>
+                  </div>
+                  
+                  {/* Online Status Dot (Only shown in default view) */}
+                  {!isSearching && <div className="w-2 h-2 bg-green-500 rounded-full"></div>}
+                </div>
+              </Link>
+            ))
+          ) : (
+             // Fallback State: What we show if the search finds nothing.
+             <p className="text-sm text-gray-400 italic">No peers found matching &quot;{query}&quot;</p>
+          )}
+
+        </div>
+      </section>
+
+      {/* Resources Search Results Section 
+          (Only rendered if 'isSearching' is true AND we have results) */}
+      {isSearching && (
+        <section>
+            <h2 className="text-lg font-bold text-black dark:text-white mb-4">Resources found ({filteredResources.length})</h2>
+            <div className="space-y-3">
+                {filteredResources.length > 0 ? (
+                    filteredResources.map((res) => (
+                        <div key={res.id} className="bg-white dark:bg-gray-900 p-3 rounded-xl shadow-sm border border-gray-50 dark:border-gray-800 flex items-center">
+                            <div className={`w-10 h-10 rounded-lg ${res.color} flex items-center justify-center mr-3`}>
+                                <span className={`${res.text} font-bold text-[10px]`}>{res.type}</span>
+                            </div>
+                            <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{res.title}</span>
+                        </div>
+                    ))
+                ) : (
+                    <p className="text-sm text-gray-400 italic">No resources found.</p>
+                )}
+            </div>
+        </section>
+      )}
+      
     </main>
   );
 }
